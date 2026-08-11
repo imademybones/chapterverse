@@ -1,0 +1,162 @@
+:root {
+  --bg: #faf6ef;
+  --surface: #ffffff;
+  --border: #e4dccd;
+  --text: #241f18;
+  --text-dim: #6b6355;
+  --accent: #7a3b2e;
+  --accent-soft: #f1e2da;
+  --accent2: #2f5350;
+  --accent2-soft: #dfe9e7;
+  --radius: 10px;
+  --shadow: 0 1px 2px rgba(36, 31, 24, 0.06), 0 8px 24px rgba(36, 31, 24, 0.05);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height: 1.5;
+}
+
+h1, h2, h3 { font-family: 'Fraunces', Georgia, serif; margin: 0 0 0.4em; }
+
+.wrap { max-width: 880px; margin: 0 auto; padding: 0 20px; }
+
+.site-header { padding: 40px 0 24px; border-bottom: 1px solid var(--border); }
+.wordmark { font-size: 2.4rem; font-weight: 700; letter-spacing: -0.01em; }
+.tagline { margin: 0; color: var(--text-dim); font-size: 1.05rem; }
+
+.tabs { display: flex; gap: 8px; padding: 18px 20px 0; }
+.tab-btn {
+  font-family: inherit; font-size: 0.95rem; font-weight: 600;
+  padding: 9px 16px; border-radius: 999px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-dim); cursor: pointer;
+}
+.tab-btn.is-active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.tab-btn:hover:not(.is-active) { border-color: var(--accent); color: var(--text); }
+
+main.wrap { padding-top: 28px; padding-bottom: 60px; min-height: 50vh; }
+
+.status-banner {
+  background: var(--accent-soft); border: 1px solid var(--accent);
+  color: var(--accent); padding: 12px 16px; border-radius: var(--radius);
+  margin-bottom: 20px; font-size: 0.92rem;
+}
+.status-banner.is-error { background: #fbe6e2; border-color: #a3382a; color: #7a2818; }
+
+/* ---- Find tab ---- */
+
+.field-label { display: block; font-weight: 600; margin-bottom: 8px; }
+#bookSearch, .browse-controls input {
+  width: 100%; font: inherit; font-size: 1.05rem; padding: 12px 14px;
+  border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface);
+}
+.book-results {
+  margin-top: 6px; border-radius: var(--radius); overflow: hidden;
+  border: 1px solid transparent;
+}
+.book-results:not(:empty) { border-color: var(--border); background: var(--surface); box-shadow: var(--shadow); }
+.book-result {
+  display: flex; justify-content: space-between; gap: 10px;
+  padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border);
+}
+.book-result:last-child { border-bottom: none; }
+.book-result:hover { background: var(--accent-soft); }
+.book-result .author { color: var(--text-dim); font-size: 0.9rem; }
+
+.find-output { margin-top: 28px; }
+.selected-book { display: flex; align-items: baseline; gap: 10px; margin-bottom: 18px; }
+.selected-book h2 { font-size: 1.5rem; }
+.selected-book .author { color: var(--text-dim); }
+
+.pairing-section-label {
+  font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-dim); font-weight: 600; margin: 22px 0 10px;
+}
+.empty-state { color: var(--text-dim); padding: 18px 0; }
+
+/* ---- Cards ---- */
+
+.album-card {
+  display: flex; flex-direction: column; gap: 8px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px 18px; box-shadow: var(--shadow); margin-bottom: 14px;
+}
+.album-card .album-title { font-family: 'Fraunces', serif; font-size: 1.15rem; font-weight: 600; }
+.album-card .artist { color: var(--text-dim); }
+.album-card .why-it-pairs { font-style: italic; color: var(--text); margin: 2px 0; }
+.album-card .suggested-note { font-size: 0.85rem; color: var(--text-dim); }
+
+.tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.tag-chip {
+  font-size: 0.78rem; padding: 3px 10px; border-radius: 999px;
+  background: var(--accent2-soft); color: var(--accent2); font-weight: 500;
+}
+
+.card-actions { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
+.heart-btn {
+  border: 1px solid var(--border); background: var(--surface); border-radius: 999px;
+  padding: 5px 12px; font: inherit; font-size: 0.85rem; cursor: pointer; color: var(--text);
+}
+.heart-btn:hover { border-color: var(--accent); }
+.card-link { font-size: 0.85rem; color: var(--accent2); text-decoration: none; font-weight: 600; }
+.card-link:hover { text-decoration: underline; }
+.delete-btn {
+  margin-left: auto; border: none; background: none; color: var(--text-dim);
+  cursor: pointer; font-size: 0.85rem;
+}
+.delete-btn:hover { color: #a3382a; }
+
+/* ---- Browse tab ---- */
+
+.browse-controls { margin-bottom: 18px; }
+.pairing-grid { display: grid; gap: 14px; }
+.pairing-grid .pairing-row {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px 18px; box-shadow: var(--shadow);
+}
+.pairing-row .pairing-books-albums { font-weight: 600; }
+.pairing-row .pairing-books-albums .sep { color: var(--text-dim); font-weight: 400; margin: 0 6px; }
+
+/* ---- Contribute tab ---- */
+
+.contribute-grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.contribute-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 20px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px;
+}
+.contribute-card label { display: flex; flex-direction: column; gap: 4px; font-size: 0.88rem; font-weight: 600; color: var(--text-dim); }
+.contribute-card input, .contribute-card select, .contribute-card textarea {
+  font: inherit; font-size: 0.95rem; padding: 8px 10px; border: 1px solid var(--border);
+  border-radius: 6px; background: var(--bg); color: var(--text); font-weight: 400;
+}
+.contribute-card > button {
+  margin-top: 6px; align-self: flex-start; font: inherit; font-weight: 600;
+  background: var(--accent); color: #fff; border: none; padding: 10px 18px;
+  border-radius: 999px; cursor: pointer;
+}
+.contribute-card > button:hover { opacity: 0.9; }
+.form-status { margin: 0; font-size: 0.85rem; min-height: 1.2em; }
+.form-status.is-success { color: var(--accent2); }
+.form-status.is-error { color: #a3382a; }
+
+.tag-picker { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag-option {
+  font-size: 0.8rem; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border);
+  background: var(--bg); cursor: pointer; font-weight: 500; color: var(--text-dim);
+}
+.tag-option.is-selected { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* ---- Footer ---- */
+
+.site-footer { padding: 30px 0 60px; color: var(--text-dim); font-size: 0.85rem; border-top: 1px solid var(--border); margin-top: 20px; }
+.site-footer a { color: var(--accent2); }
+
+@media (max-width: 560px) {
+  .wordmark { font-size: 1.9rem; }
+  .tabs { flex-wrap: wrap; }
+}

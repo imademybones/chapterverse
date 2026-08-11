@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liner Notes</title>
+<meta name="description" content="Find an album to read by. A public, collaborative pairing of books and music.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <h1 class="wordmark">Liner Notes</h1>
+    <p class="tagline">Find an album to read by.</p>
+  </div>
+</header>
+
+<nav class="tabs wrap" id="tabs">
+  <button class="tab-btn is-active" data-action="switch-tab" data-tab="find">Find a Pairing</button>
+  <button class="tab-btn" data-action="switch-tab" data-tab="browse">Browse All</button>
+  <button class="tab-btn" data-action="switch-tab" data-tab="contribute">Contribute</button>
+</nav>
+
+<main class="wrap">
+  <div id="statusBanner" class="status-banner" hidden></div>
+
+  <section id="tab-find" class="tab-panel">
+    <div class="find-search">
+      <label for="bookSearch" class="field-label">What are you reading?</label>
+      <input id="bookSearch" type="text" placeholder="Search by title or author&hellip;" autocomplete="off">
+      <div id="bookResults" class="book-results"></div>
+    </div>
+    <div id="findOutput" class="find-output"></div>
+  </section>
+
+  <section id="tab-browse" class="tab-panel" hidden>
+    <div class="browse-controls">
+      <input id="browseSearch" type="text" placeholder="Filter pairings&hellip;" autocomplete="off">
+    </div>
+    <div id="pairingGrid" class="pairing-grid"></div>
+  </section>
+
+  <section id="tab-contribute" class="tab-panel" hidden>
+    <div class="contribute-grid">
+      <form id="addBookForm" class="contribute-card" data-action="submit-add-book">
+        <h2>Add a book</h2>
+        <label>Title <input name="title" required></label>
+        <label>Author <input name="author"></label>
+        <label>Genre
+          <select name="genre">
+            <option value="">&ndash; genre &ndash;</option>
+          </select>
+        </label>
+        <label>Mood tags
+          <div class="tag-picker" data-tag-picker="book"></div>
+        </label>
+        <label>Notes <textarea name="notes" rows="2"></textarea></label>
+        <label>Your name (optional) <input name="addedBy"></label>
+        <button type="submit">Add book</button>
+        <p class="form-status" data-status></p>
+      </form>
+
+      <form id="addAlbumForm" class="contribute-card" data-action="submit-add-album">
+        <h2>Add an album</h2>
+        <label>Title <input name="title" required></label>
+        <label>Artist <input name="artist"></label>
+        <label>Genre
+          <select name="genre">
+            <option value="">&ndash; genre &ndash;</option>
+          </select>
+        </label>
+        <label>Mood tags
+          <div class="tag-picker" data-tag-picker="album"></div>
+        </label>
+        <label>Spotify URL <input name="spotifyUrl" type="url" placeholder="https://open.spotify.com/album/&hellip;"></label>
+        <label>Bandcamp URL <input name="bandcampUrl" type="url"></label>
+        <label>Notes <textarea name="notes" rows="2"></textarea></label>
+        <label>Your name (optional) <input name="addedBy"></label>
+        <button type="submit">Add album</button>
+        <p class="form-status" data-status></p>
+      </form>
+
+      <form id="addPairingForm" class="contribute-card" data-action="submit-add-pairing">
+        <h2>Pair a book with an album</h2>
+        <label>Book <select name="bookId" required><option value="">&ndash; choose a book &ndash;</option></select></label>
+        <label>Album <select name="albumId" required><option value="">&ndash; choose an album &ndash;</option></select></label>
+        <label>Why it pairs <textarea name="whyItPairs" rows="3" required placeholder="What do they share &mdash; pace, mood, setting?"></textarea></label>
+        <label>Your name (optional) <input name="addedBy"></label>
+        <button type="submit">Add pairing</button>
+        <p class="form-status" data-status></p>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer wrap">
+  <p>Public and collaborative &mdash; anyone can add a book, an album, or a pairing.
+    <a href="#" id="curatorLink" data-action="unlock-curator">Curator&nbsp;unlock</a></p>
+</footer>
+
+<div id="modalSlot"></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
