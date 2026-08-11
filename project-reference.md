@@ -42,15 +42,12 @@ Contemplative.
 
 ## Cloudflare Worker
 
-**Not yet deployed.** Source lives in this repo (`worker/liner-notes-worker.js`),
-same as Sonic Radar's setup — deploy with `wrangler deploy` from
-`worker/`. `worker/wrangler.toml` has `BASE_ID` set; still needed before
-first deploy:
-
-```
-wrangler secret put AIRTABLE_TOKEN
-wrangler secret put CURATOR_PASSPHRASE
-```
+Deployed at `https://liner-notes-worker.stephen-nolan85.workers.dev`.
+Source lives in this repo (`worker/liner-notes-worker.js`), same as
+Sonic Radar's setup — redeploy with `npx wrangler deploy` from `worker/`
+after any source change. `AIRTABLE_TOKEN` and `CURATOR_PASSPHRASE` are
+set as Worker secrets (`wrangler secret put ...`, run by Stephen
+directly — never stored in this repo or asked of Claude).
 
 Routes (path &rarr; Airtable table):
 - `/books`, `/albums`, `/pairings` — GET (list, paginated via `?offset=`),
@@ -61,29 +58,35 @@ Routes (path &rarr; Airtable table):
 - `/verify-curator` — GET, checks the passphrase header
 - `/health` — GET
 
-Once deployed, set `WORKER_URL` in `app.js` (currently `''`, which makes
-the app show a "UI preview only" banner instead of attempting real
-requests) and `ALLOWED_ORIGIN` in `worker/wrangler.toml` to match wherever
-`index.html` ends up served from.
+`WORKER_URL` in `app.js` points at the URL above. `ALLOWED_ORIGIN` in
+`worker/wrangler.toml` is `https://imademybones.github.io` — matches the
+Pages origin below (CORS checks scheme+host only, not path, so it covers
+every repo under that GitHub Pages account, same as Sonic Radar's setup).
 
 ## Deploy
 
-`index.html`, `app.js`, `styles.css`, and `lib/` are the whole
-deployable surface — any static host (GitHub Pages, Cloudflare Pages)
-works, no build step. The Worker deploys separately via `wrangler deploy`
-from `worker/`.
+**Frontend**: GitHub Pages, repo `imademybones/liner-notes` (public),
+served from `main` at the repo root — no build step. Live at
+`https://imademybones.github.io/liner-notes/`. Push to `main` to update;
+Pages rebuilds automatically.
+
+**Worker**: `npx wrangler deploy` from `worker/` (separate deploy step,
+not tied to the GitHub push).
 
 ## Naming
 
 "Liner Notes" is a working title picked during scaffolding — a
 book/album pun, not a final decision. Rename freely; nothing in the
-Airtable base name or Worker name needs to match the eventual public
-name.
+Airtable base name, Worker name, or `imademybones/liner-notes` repo name
+needs to match the eventual public name (though renaming the repo later
+would change the GitHub Pages URL and require updating `ALLOWED_ORIGIN`
+if it ever became repo-specific).
 
 ## Status
 
-Scaffolded 2026-08-11: Airtable base + 3 tables created, Worker source
-written but not deployed, static frontend built but untested against
-real data (no Worker to hit yet). Next steps: deploy the Worker, seed a
-first batch of real pairings from Stephen's reading history, pick a
-real name/domain.
+Deployed 2026-08-11: Airtable base + 3 tables, Worker, and GitHub
+Pages frontend are all live and verified working end-to-end (Worker
+reaches Airtable, curator gate enforced, CORS confirmed from the real
+Pages origin). No content yet — Books/Albums/Pairings are all empty.
+Next steps: seed a first batch of real pairings from Stephen's reading
+history, pick a real name/domain.

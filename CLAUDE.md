@@ -31,12 +31,15 @@ via `node --test lib/pure.test.js`. A GitHub Actions workflow
 
 - Open `index.html` directly in a browser, or serve it locally
   (`python3 -m http.server` from the repo root) — no build step either way.
-- `app.js` needs a live Worker to load/save real data — see
-  project-reference.md for `WORKER_URL` and deploy status. **Not deployed
-  yet** as of scaffolding: `WORKER_URL` is `''`, which short-circuits to a
-  status banner ("UI preview only") instead of a real fetch, so the shell
-  still renders and tabs still switch — useful for pure UI iteration, but
-  Find/Browse/Contribute have nothing to show until a Worker exists.
+- The Worker is deployed and `WORKER_URL` in `app.js` points at it — see
+  project-reference.md for the URL and current status. **A local
+  `python3 -m http.server` origin will hit a CORS wall**, though:
+  `ALLOWED_ORIGIN` in `worker/wrangler.toml` is scoped to the real GitHub
+  Pages origin, not `localhost`. The app still degrades gracefully (a
+  "Could not load data" banner, not a crash — verified during the initial
+  deploy), so this is fine for pure UI iteration, but Find/Browse/
+  Contribute need the real Pages URL (or a temporary `ALLOWED_ORIGIN`
+  change + Worker redeploy) to exercise against real data locally.
 - Verify changes by exercising the UI in a browser (search for a book,
   switch tabs, fill out the contribute forms, heart a pairing, curator
   unlock + delete) — no UI test automation, only the pure-function suite.
