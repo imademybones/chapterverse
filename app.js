@@ -4,8 +4,13 @@ import {
   recordToAlbum, albumToFields,
   recordToPairing, pairingToFields,
   suggestAlbumsForBook, pairingsForBook, albumsForPairings,
+  waveformPath,
 } from './lib/pure.js';
 
+// Deliberately still "liner-notes-worker" — the Cloudflare Worker resource
+// was never renamed to match the Chapterverse rebrand (would require the
+// user to re-run `wrangler secret put` for a new resource). Internal
+// infra names don't need to match the public brand — see CLAUDE.md.
 const WORKER_URL = 'https://liner-notes-worker.stephen-nolan85.workers.dev';
 
 const BOOK_GENRES = ['Fiction', 'Fantasy', 'Sci-Fi', 'Mystery/Thriller', 'Horror', 'Romance',
@@ -25,7 +30,7 @@ const state = {
   activeTab: 'find',
   selectedBookId: null,
   selectedTags: { book: new Set(), album: new Set() },
-  curatorKey: localStorage.getItem('linerNotes_curatorKey') || null,
+  curatorKey: localStorage.getItem('chapterverse_curatorKey') || null,
 };
 
 // ---- API ----
@@ -73,6 +78,7 @@ async function init() {
   populateTagPickers();
   populatePairingFormSelects();
   wireEvents();
+  initHeroWave();
 
   if (!WORKER_URL) {
     showStatus('Not connected to a data source yet — this is a UI preview only. See CLAUDE.md "Deploy".', 'is-error');
@@ -92,6 +98,24 @@ function showStatus(message, cls) {
   el.textContent = message;
   el.className = `status-banner ${cls || ''}`;
   el.hidden = false;
+}
+
+// Ambient idle waveform in the header — ties the "score your reading
+// session" framing to something that actually looks like a signal, before
+// any book is even searched. Purely decorative (unlike the per-pairing
+// waveform below, which is derived from real mood-tag data) — respects
+// prefers-reduced-motion via the CSS animation itself, not JS.
+function initHeroWave() {
+  const wave = document.getElementById('heroWave');
+  if (!wave) return;
+  const bars = 48;
+  let html = '';
+  for (let i = 0; i < bars; i++) {
+    const delay = (i * 0.045).toFixed(3);
+    const height = (14 + Math.sin(i * 0.6) * 10 + Math.random() * 8).toFixed(1);
+    html += `<i style="animation-delay:${delay}s; height:${height}px"></i>`;
+  }
+  wave.innerHTML = html;
 }
 
 // ---- Form scaffolding ----
@@ -167,16 +191,21 @@ function renderBookSearchResults(query) {
   `).join('');
 }
 
-function albumCardHtml(album, { whyItPairs, hearts, pairingId, suggestedNote } = {}) {
+function albumCardHtml(album, { kicker, whyItPairs, hearts, pairingId, suggestedNote, waveformTags } = {}) {
   const spotify = spotifyEmbedUrl(album.spotifyUrl);
   const bandcamp = safeExternalUrl(album.bandcampUrl);
   return `
     <div class="album-card">
+      ${kicker ? `<p class="card-kicker">${esc(kicker)}</p>` : ''}
       <div class="album-title">${esc(album.title)}</div>
       <div class="artist">${esc(album.artist)}</div>
       ${whyItPairs ? `<p class="why-it-pairs">&ldquo;${esc(whyItPairs)}&rdquo;</p>` : ''}
       ${suggestedNote ? `<p class="suggested-note">${esc(suggestedNote)}</p>` : ''}
       <div class="tag-row">${(album.moodTags || []).map(t => `<span class="tag-chip">${esc(t)}</span>`).join('')}</div>
+      ${waveformTags && waveformTags.length ? `
+        <div class="mini-wave"><svg viewBox="0 0 320 44" preserveAspectRatio="none"><path d="${waveformPath(waveformTags, 320, 44)}"></path></svg></div>
+        <p class="mini-wave-label">signal shape &mdash; derived from this pairing's mood tags</p>
+      ` : ''}
       ${spotify ? `<iframe src="${spotify}" width="100%" height="80" frameborder="0" allow="encrypted-media" loading="lazy"></iframe>` : ''}
       <div class="card-actions">
         ${bandcamp ? `<a class="card-link" href="${bandcamp}" target="_blank" rel="noopener noreferrer">Bandcamp &#8599;</a>` : ''}
@@ -201,16 +230,21 @@ function renderFind() {
 
   out.innerHTML = `
     <div class="selected-book">
+      <p class="card-kicker">Now reading</p>
       <h2>${esc(book.title)}</h2>
       <span class="author">${esc(book.author)}</span>
+      <div class="tag-row">${(book.moodTags || []).map(t => `<span class="tag-chip is-on">${esc(t)}</span>`).join('')}</div>
     </div>
-    <div class="pairing-section-label">Curated pairings</div>
+    <div class="pairing-section-label">The score</div>
     ${curatedResolved.length
-      ? curatedResolved.map(x => albumCardHtml(x.album, { whyItPairs: x.pairing.whyItPairs, hearts: x.pairing.hearts, pairingId: x.pairing.id })).join('')
-      : `<p class="empty-state">No one has paired this book yet &mdash; be the first, in the Contribute tab.</p>`}
+      ? curatedResolved.map(x => albumCardHtml(x.album, {
+          kicker: 'The score', whyItPairs: x.pairing.whyItPairs, hearts: x.pairing.hearts,
+          pairingId: x.pairing.id, waveformTags: book.moodTags,
+        })).join('')
+      : `<p class="empty-state">No one has scored this book yet &mdash; be the first, in the Contribute tab.</p>`}
     ${suggested.length ? `
-      <div class="pairing-section-label">Similar mood, not yet paired</div>
-      ${suggested.map(x => albumCardHtml(x.album, { suggestedNote: 'Suggested by shared mood tags, not yet a curated pairing.' })).join('')}
+      <div class="pairing-section-label">Similar mood, not yet scored</div>
+      ${suggested.map(x => albumCardHtml(x.album, { kicker: 'Similar mood', suggestedNote: 'Suggested by shared mood tags, not yet a curated score.' })).join('')}
     ` : ''}
   `;
 }
@@ -229,7 +263,7 @@ function renderBrowse(filterText = '') {
     .filter(x => !q || `${x.book.title} ${x.book.author} ${x.album.title} ${x.album.artist}`.toLowerCase().includes(q));
 
   if (!rows.length) {
-    grid.innerHTML = `<p class="empty-state">No pairings yet.</p>`;
+    grid.innerHTML = `<p class="empty-state">No scores yet.</p>`;
     return;
   }
 
@@ -276,7 +310,7 @@ async function unlockCurator() {
     const res = await fetch(`${WORKER_URL}/verify-curator`, { headers: { 'X-Curator-Passphrase': key } });
     if (!res.ok) { alert('Incorrect passphrase.'); return; }
     state.curatorKey = key;
-    localStorage.setItem('linerNotes_curatorKey', key);
+    localStorage.setItem('chapterverse_curatorKey', key);
     renderActiveTab();
   } catch (err) {
     alert(`Could not verify: ${err.message}`);
@@ -351,7 +385,7 @@ async function handleAddPairing(form) {
     const record = await apiRequest('/pairings', { method: 'POST', body: JSON.stringify({ fields: pairingToFields(pairing) }) });
     state.pairings.push(recordToPairing(record));
     form.reset();
-    statusEl.textContent = 'Paired.';
+    statusEl.textContent = 'Scored.';
     statusEl.className = 'form-status is-success';
   } catch (err) {
     statusEl.textContent = err.message;

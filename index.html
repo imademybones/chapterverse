@@ -3,22 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Liner Notes</title>
-<meta name="description" content="Find an album to read by. A public, collaborative pairing of books and music.">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>Chapterverse</title>
+<meta name="description" content="Score your reading session. A public, collaborative pairing of books and music.">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <header class="site-header">
   <div class="wrap header-inner">
-    <h1 class="wordmark">Liner Notes</h1>
-    <p class="tagline">Find an album to read by.</p>
+    <div class="hero-wave" id="heroWave" aria-hidden="true"></div>
+    <h1 class="wordmark">Chapterverse<span class="dot">.</span></h1>
+    <p class="tagline">Score your reading session.</p>
   </div>
 </header>
 
 <nav class="tabs wrap" id="tabs">
-  <button class="tab-btn is-active" data-action="switch-tab" data-tab="find">Find a Pairing</button>
+  <button class="tab-btn is-active" data-action="switch-tab" data-tab="find">Find a Score</button>
   <button class="tab-btn" data-action="switch-tab" data-tab="browse">Browse All</button>
   <button class="tab-btn" data-action="switch-tab" data-tab="contribute">Contribute</button>
 </nav>
@@ -83,12 +83,12 @@
       </form>
 
       <form id="addPairingForm" class="contribute-card" data-action="submit-add-pairing">
-        <h2>Pair a book with an album</h2>
+        <h2>Score a book</h2>
         <label>Book <select name="bookId" required><option value="">&ndash; choose a book &ndash;</option></select></label>
         <label>Album <select name="albumId" required><option value="">&ndash; choose an album &ndash;</option></select></label>
         <label>Why it pairs <textarea name="whyItPairs" rows="3" required placeholder="What do they share &mdash; pace, mood, setting?"></textarea></label>
         <label>Your name (optional) <input name="addedBy"></label>
-        <button type="submit">Add pairing</button>
+        <button type="submit">Add score</button>
         <p class="form-status" data-status></p>
       </form>
     </div>
@@ -96,7 +96,7 @@
 </main>
 
 <footer class="site-footer wrap">
-  <p>Public and collaborative &mdash; anyone can add a book, an album, or a pairing.
+  <p>Public and collaborative &mdash; anyone can add a book, an album, or a score.
     <a href="#" id="curatorLink" data-action="unlock-curator">Curator&nbsp;unlock</a></p>
 </footer>
 

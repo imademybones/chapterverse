@@ -1,11 +1,14 @@
-# Liner Notes — project reference
+# Chapterverse — project reference
 
 Quick lookup for IDs and endpoints used by the app. Update this whenever a
 table/field is added, renamed, or the Worker is redeployed elsewhere.
 
 ## Airtable
 
-Base: **Liner Notes** — `app88t5UhjL4R8G0A`
+Base: **Liner Notes** — `app88t5UhjL4R8G0A` (still the old name — no
+Airtable API support for renaming a base, only tables/fields; a 10-second
+manual rename in the Airtable UI whenever it's worth doing, purely
+cosmetic either way)
 
 Created inside the **Library Tracker** workspace (`wspHfhbnKxQm0fxVf`) for
 lack of a dedicated workspace at scaffold time — an arbitrary placement,
@@ -42,8 +45,9 @@ Contemplative.
 
 ## Cloudflare Worker
 
-Deployed at `https://liner-notes-worker.stephen-nolan85.workers.dev`.
-Source lives in this repo (`worker/liner-notes-worker.js`), same as
+Deployed at `https://liner-notes-worker.stephen-nolan85.workers.dev` —
+**deliberately still the old resource name**, see "Naming" below for
+why. Source lives in this repo (`worker/liner-notes-worker.js`), same as
 Sonic Radar's setup — redeploy with `npx wrangler deploy` from `worker/`
 after any source change. `AIRTABLE_TOKEN` and `CURATOR_PASSPHRASE` are
 set as Worker secrets (`wrangler secret put ...`, run by Stephen
@@ -61,32 +65,68 @@ Routes (path &rarr; Airtable table):
 `WORKER_URL` in `app.js` points at the URL above. `ALLOWED_ORIGIN` in
 `worker/wrangler.toml` is `https://imademybones.github.io` — matches the
 Pages origin below (CORS checks scheme+host only, not path, so it covers
-every repo under that GitHub Pages account, same as Sonic Radar's setup).
+every repo under that GitHub Pages account, same as Sonic Radar's setup,
+and needed no change when the repo was renamed).
 
 ## Deploy
 
-**Frontend**: GitHub Pages, repo `imademybones/liner-notes` (public),
-served from `main` at the repo root — no build step. Live at
-`https://imademybones.github.io/liner-notes/`. Push to `main` to update;
-Pages rebuilds automatically.
+**Frontend**: GitHub Pages, repo `imademybones/chapterverse` (public,
+renamed 2026-08-11 from `imademybones/liner-notes` via `gh repo rename`
+— GitHub auto-redirects the old URL and Pages carried over without
+reconfiguration), served from `main` at the repo root — no build step.
+Live at `https://imademybones.github.io/chapterverse/`. Push to `main`
+to update; Pages rebuilds automatically.
 
 **Worker**: `npx wrangler deploy` from `worker/` (separate deploy step,
 not tied to the GitHub push).
 
 ## Naming
 
-"Liner Notes" is a working title picked during scaffolding — a
-book/album pun, not a final decision. Rename freely; nothing in the
-Airtable base name, Worker name, or `imademybones/liner-notes` repo name
-needs to match the eventual public name (though renaming the repo later
-would change the GitHub Pages URL and require updating `ALLOWED_ORIGIN`
-if it ever became repo-specific).
+**Chapterverse**, decided 2026-08-11, replacing the scaffolding working
+title "Liner Notes". Landed on it after a wordplay-vs-plain naming
+session: "Chapter & Verse" (the phrase this compresses from) was liked
+for its double meaning — chapter (book) meets verse (song), plus the
+idiom already means "precise, exact details" — but domain/collision
+research turned up too much noise to use as-is:
+- `chapterandverse.com` and most other TLDs were squatted since 2002.
+- The phrase itself is already used by a SiriusXM/Audible music-and-authors
+  series and a few podcasts — soft collisions, no single dominant owner.
+- Two literal alternatives considered and rejected for harder collisions:
+  **Bookscore** is the name of an actual funded manuscript-scoring startup
+  (bookscore.ai, CB Insights profile) — a real live competitor in the book
+  space, not just a taken domain. **StoryScore** was similarly crowded
+  (6 of 7 TLDs taken, several small independent claimants) though no
+  single dominant owner.
+
+**Chapterverse** (the compressed form) cleared the same check:
+`chapterverse.com`/`.io` are taken, but `.app`/`.fm`/`.net`/`.org`/`.co`
+are open, and it sidesteps the "Chapter and Verse" collisions entirely by
+not being that exact phrase. Domain not yet registered — that's on
+Stephen, via wherever he buys domains, not something done in this repo.
+
+**Nothing in the Airtable base name or Worker resource name was updated
+to match** — both were designed from scaffold time not to need it (see
+CLAUDE.md "Design" for why the Worker specifically was left alone: doing
+so would mean a brand-new Cloudflare Worker resource and re-entering both
+secrets). The GitHub repo *was* renamed, since that determines the public
+Pages URL and costs nothing to change (GitHub handles the redirect).
 
 ## Status
 
-Deployed 2026-08-11: Airtable base + 3 tables, Worker, and GitHub
-Pages frontend are all live and verified working end-to-end (Worker
-reaches Airtable, curator gate enforced, CORS confirmed from the real
-Pages origin). No content yet — Books/Albums/Pairings are all empty.
-Next steps: seed a first batch of real pairings from Stephen's reading
-history, pick a real name/domain.
+**Redesigned and renamed 2026-08-11**, same day as the initial deploy.
+Visual identity moved from the original plain scaffold styling to the
+"Frequency" design direction in the "Magnetic" (violet) color variant —
+see CLAUDE.md "Design" for the full decision trail (three concepts, four
+palettes, all reviewed as an Artifact mockup before implementation) and
+what changed (dark equipment aesthetic, self-hosted Space Grotesk,
+mood-tag-driven waveform on curated pairings, "score your reading
+session" copy reframe throughout). Repo renamed `liner-notes` &rarr;
+`chapterverse` (GitHub + local directory), Worker/Airtable base
+deliberately left unrenamed. All changes verified locally (graceful
+no-data state, form interactions, tag pickers) and end-to-end against the
+live Worker at the new Pages URL. `node --test lib/pure.test.js` passing
+(16 tests, including the new waveform functions).
+
+No content yet — Books/Albums/Pairings are all empty. Next steps: seed a
+first batch of real pairings from Stephen's reading history, register a
+domain.

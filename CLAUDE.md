@@ -18,9 +18,11 @@ this is the right template because the core premise here is the same:
 open contribution, low-stakes engagement (hearts), curator-gated removal.
 Separate repo, separate Airtable base, separate Worker.
 
-"Liner Notes" is a **working title**, chosen during scaffolding purely
-as a books/music pun — not a considered final name. Don't treat it as
-settled; see project-reference.md "Naming".
+**Renamed to "Chapterverse" on 2026-08-11**, replacing the scaffolding
+working title "Liner Notes" — see project-reference.md "Naming" for the
+history and the domain-availability research behind the choice (several
+other candidates, including "Bookscore" and "StoryScore", were rejected
+for colliding with existing live products in the same space).
 
 ## Development
 
@@ -148,3 +150,70 @@ list plus a few more (see `ALBUM_GENRES`). Genre is browse/filter
 metadata only — `suggestAlbumsForBook()` matches on Mood Tags, never
 Genre, deliberately: a genre match (e.g. "Fantasy book, Soundtrack
 album") says nothing about whether the *mood* actually fits.
+
+## Design
+
+**"Frequency" in the "Magnetic" palette — a deliberate, committed dark
+theme, not a light/dark toggle.** Chosen 2026-08-11 after reviewing
+three full design directions as an Artifact mockup (a kraft-paper
+"Sleeve" concept, a handwritten-marginalia "Marginalia" concept, and
+this one) and four color variants of Frequency specifically (Phosphor
+teal, Magnetic violet, Solar amber, Crimson pink-red). Magnetic won for
+tying directly to the "magnetic" word in the original design brief and
+reading more distinctive/premium than the cooler Phosphor original. Same
+reasoning as Sonic Radar committing to one light theme: this is an
+equipment/signal aesthetic, and it doesn't make sense half-inverted for
+a conventional "light mode" — see `:root` in `styles.css` for the token
+set (`--void`/`--panel`/`--signal`/`--mist`/`--hair`).
+
+**The reframe from "find an album" to "score your reading session" is
+copy, not just a slogan — it changed real UI text.** The original
+scaffold framed this as browsing music to find something to read *to*;
+the user pointed out that's backwards, since you already have the book
+and are looking for what accompanies it. That flipped the nav label
+("Find a Pairing" &rarr; "Find a Score"), the tagline, the contribute
+form ("Pair a book with an album" &rarr; "Score a book", "Add pairing"
+&rarr; "Add score"), and the result panel's kicker labels ("Now
+reading" for the book, "The score" for the paired album) — book is
+always presented as the given, album as the output. If you touch this
+copy again, keep that direction; don't drift back to album-first
+language.
+
+**Space Grotesk is self-hosted** (`fonts/space-grotesk-700.woff2`, one
+weight only, `@font-face` in `styles.css`) rather than loaded from
+Google Fonts — used sparingly, only for the wordmark and card/heading
+titles, exactly as "used with restraint" as the design brief called for.
+Body text and nav are system sans; mono labels/chips/inputs use a system
+monospace stack (`--font-mono`) — no mono webfont needed, system
+monospace is a legitimate, deliberate choice here (see the
+`artifact-design` skill's guidance on utility faces), not a corner cut.
+
+**The per-pairing waveform (`.mini-wave`) is genuinely data-driven, not
+decorative — this is the one signature element, per "spend your
+boldness in one place."** `waveformPath()` in `lib/pure.js` (tested in
+`lib/pure.test.js`) derives a smooth-vs-jagged, high-vs-low-amplitude
+SVG path from a book's actual Mood Tags via a deterministic string hash
+(`moodSeed()`) — a "Dreamy, Contemplative" book reads as a smooth low
+curve, a "Tense, Bleak" one reads jagged. It only renders on **curated**
+pairing cards in the Find tab (using the *book's* mood tags, not the
+album's — see `renderFind()` in `app.js`), deliberately not on suggested
+albums, browse-tab rows, or anywhere else — adding it everywhere would
+turn the one signature moment into wallpaper. The header's `.hero-wave`
+is a separate, purely decorative ambient animation (`initHeroWave()`)
+that reacts to nothing; don't confuse the two or try to make the hero
+wave "mean" something — it's atmosphere, the mini-wave is data.
+
+**The Cloudflare Worker resource keeps its old name
+(`liner-notes-worker`), by design, not oversight.** Renaming it to match
+the brand would mean deploying a brand-new Worker under a new name (Cloudflare
+doesn't rename in place) and asking the user to re-run `wrangler secret
+put` for both secrets on that new resource. Internal infra names never
+needed to match the public brand (see project-reference.md "Naming"),
+so this was skipped to avoid the friction. `WORKER_URL` in `app.js`
+still points at `liner-notes-worker.stephen-nolan85.workers.dev` —
+that's expected, not a leftover bug. Same reasoning applied to the
+Airtable base name (still "Liner Notes" in the Airtable UI — no API
+support for renaming a base exists anyway) and the `linerNotes_curatorKey`
+&rarr; `chapterverse_curatorKey` localStorage key, which *was* renamed
+since it's just a client-side cache key with zero users yet — no
+migration cost, no reason not to.
