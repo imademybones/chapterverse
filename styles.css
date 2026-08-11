@@ -59,7 +59,8 @@ h1, h2, h3 { font-family: 'Space Grotesk', -apple-system, sans-serif; font-weigh
 .tab-btn.is-active { color: var(--signal); border-top-color: var(--signal); background: var(--void); }
 .tab-btn:hover:not(.is-active) { color: var(--text); }
 .tab-btn:focus-visible, .heart-btn:focus-visible, .card-link:focus-visible, .delete-btn:focus-visible,
-input:focus-visible, textarea:focus-visible, select:focus-visible, .tag-option:focus-visible, .book-result:focus-visible {
+input:focus-visible, textarea:focus-visible, select:focus-visible, .tag-option:focus-visible, .book-result:focus-visible,
+.teaser-card:focus-visible, .modal-close:focus-visible {
   outline: 2px solid var(--signal); outline-offset: 2px;
 }
 
@@ -104,7 +105,8 @@ main.wrap { padding-top: 28px; padding-bottom: 60px; min-height: 50vh; }
 /* ---- Cards ---- */
 
 .album-card { display: flex; flex-direction: column; gap: 8px; background: var(--panel); border: 1px solid var(--hair); padding: 18px 20px; margin-bottom: 14px; }
-.album-card .album-title, .selected-book h2, .pairing-row .pairing-books-albums { font-family: 'Space Grotesk', -apple-system, sans-serif; }
+.album-card .album-title, .selected-book h2, .teaser-titles, .modal-book-title { font-family: 'Space Grotesk', -apple-system, sans-serif; }
+.sep { color: var(--mist); font-weight: 400; margin: 0 6px; font-family: -apple-system, sans-serif; }
 .album-card .album-title { font-size: 1.2rem; color: var(--text); }
 .album-card .artist { color: var(--mist); }
 .album-card .why-it-pairs { color: var(--text-soft); margin: 4px 0; line-height: 1.55; }
@@ -130,14 +132,44 @@ main.wrap { padding-top: 28px; padding-bottom: 60px; min-height: 50vh; }
 .delete-btn { margin-left: auto; border: none; background: none; color: var(--mist); cursor: pointer; font-size: 0.85rem; }
 .delete-btn:hover { color: var(--danger); }
 
-/* ---- Browse tab ---- */
+/* ---- Teaser cards (Browse All grid + landing "recently added") ---- */
+/* Compact, clickable; open the full pairing in the modal below rather
+   than duplicating why-it-pairs/chips/waveform inline — see CLAUDE.md
+   "Design" for why Browse/landing intentionally stay this lightweight. */
 
 .browse-controls { margin-bottom: 18px; }
-.pairing-grid { display: grid; gap: 12px; }
-.pairing-grid .pairing-row { background: var(--panel); border: 1px solid var(--hair); padding: 16px 20px; }
-.pairing-row .pairing-books-albums { font-weight: 700; color: var(--text); }
-.pairing-row .pairing-books-albums .sep { color: var(--mist); font-weight: 400; margin: 0 6px; font-family: -apple-system, sans-serif; }
-.pairing-row .why-it-pairs { color: var(--text-soft); }
+.pairing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.teaser-card {
+  display: flex; flex-direction: column; gap: 8px; text-align: left; width: 100%;
+  background: var(--panel); border: 1px solid var(--hair); padding: 16px 18px;
+  font: inherit; color: inherit; cursor: pointer;
+}
+.teaser-card:hover { border-color: var(--signal); }
+.teaser-titles { font-weight: 700; color: var(--text); font-size: 1.02rem; }
+.teaser-by { color: var(--mist); font-size: 0.85rem; }
+
+/* ---- Pairing modal ---- */
+
+body.modal-open { overflow: hidden; }
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(6, 5, 10, 0.78); z-index: 100;
+  display: flex; align-items: flex-start; justify-content: center; padding: 40px 20px; overflow-y: auto;
+}
+.modal-panel {
+  position: relative; background: var(--panel); border: 1px solid var(--hair);
+  max-width: 520px; width: 100%; padding: 30px 28px; margin: auto 0;
+}
+.modal-close {
+  position: absolute; top: 12px; right: 12px; width: 32px; height: 32px;
+  border: 1px solid var(--hair); background: var(--void); color: var(--mist);
+  font-size: 1.3rem; line-height: 1; cursor: pointer;
+}
+.modal-close:hover { color: var(--text); border-color: var(--signal); }
+.modal-book-title { font-size: 1.5rem; margin-bottom: 2px; }
+.modal-book-author { color: var(--mist); margin: 0 0 12px; }
+.modal-panel .tag-row { margin-bottom: 4px; }
+.modal-panel .album-card { border: none; padding: 0; margin: 0; }
+.modal-delete { margin-top: 16px; }
 
 /* ---- Contribute tab ---- */
 

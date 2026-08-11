@@ -4,7 +4,7 @@ import {
   recordToAlbum, albumToFields,
   recordToPairing, pairingToFields,
   suggestAlbumsForBook, pairingsForBook, albumsForPairings,
-  waveformPath,
+  waveformPath, mostRecentPairings,
 } from './lib/pure.js';
 
 // Deliberately still "liner-notes-worker" — the Cloudflare Worker resource
@@ -215,10 +215,37 @@ function albumCardHtml(album, { kicker, whyItPairs, hearts, pairingId, suggested
   `;
 }
 
+function pairingTeaserHtml(pairing, book, album) {
+  return `
+    <button type="button" class="teaser-card" data-action="open-pairing" data-id="${pairing.id}">
+      <div class="teaser-titles">${esc(book.title)}<span class="sep">&times;</span>${esc(album.title)}</div>
+      <div class="teaser-by">${esc(book.author)} &mdash; ${esc(album.artist)}</div>
+      <div class="tag-row">${(book.moodTags || []).slice(0, 3).map(t => `<span class="tag-chip">${esc(t)}</span>`).join('')}</div>
+    </button>
+  `;
+}
+
+function resolvedPairingCards(pairings) {
+  const albumsById = Object.fromEntries(state.albums.map(a => [a.id, a]));
+  const booksById = Object.fromEntries(state.books.map(b => [b.id, b]));
+  return pairings
+    .map(p => ({ pairing: p, book: booksById[p.bookIds[0]], album: albumsById[p.albumIds[0]] }))
+    .filter(x => x.book && x.album);
+}
+
+function renderRecentGrid(container) {
+  const cards = resolvedPairingCards(mostRecentPairings(state.pairings, 10));
+  if (!cards.length) { container.innerHTML = ''; return; }
+  container.innerHTML = `
+    <div class="pairing-section-label">Recently added</div>
+    <div class="pairing-grid">${cards.map(({ pairing, book, album }) => pairingTeaserHtml(pairing, book, album)).join('')}</div>
+  `;
+}
+
 function renderFind() {
   const book = state.books.find(b => b.id === state.selectedBookId);
   const out = document.getElementById('findOutput');
-  if (!book) { out.innerHTML = ''; return; }
+  if (!book) { renderRecentGrid(out); return; }
 
   const curated = pairingsForBook(book, state.pairings);
   const albumsById = Object.fromEntries(state.albums.map(a => [a.id, a]));
@@ -253,13 +280,9 @@ function renderFind() {
 
 function renderBrowse(filterText = '') {
   const grid = document.getElementById('pairingGrid');
-  const albumsById = Object.fromEntries(state.albums.map(a => [a.id, a]));
-  const booksById = Object.fromEntries(state.books.map(b => [b.id, b]));
   const q = filterText.trim().toLowerCase();
 
-  const rows = state.pairings
-    .map(p => ({ pairing: p, book: booksById[p.bookIds[0]], album: albumsById[p.albumIds[0]] }))
-    .filter(x => x.book && x.album)
+  const rows = resolvedPairingCards(state.pairings)
     .filter(x => !q || `${x.book.title} ${x.book.author} ${x.album.title} ${x.album.artist}`.toLowerCase().includes(q));
 
   if (!rows.length) {
@@ -267,16 +290,59 @@ function renderBrowse(filterText = '') {
     return;
   }
 
-  grid.innerHTML = rows.map(({ pairing, book, album }) => `
-    <div class="pairing-row">
-      <div class="pairing-books-albums">${esc(book.title)} <span class="sep">&times;</span> ${esc(album.title)}</div>
-      <p class="why-it-pairs">&ldquo;${esc(pairing.whyItPairs)}&rdquo;</p>
-      <div class="card-actions">
-        <button class="heart-btn" data-action="heart-pairing" data-id="${pairing.id}">&hearts; ${pairing.hearts || 0}</button>
-        ${state.curatorKey ? `<button class="delete-btn" data-action="delete-pairing" data-id="${pairing.id}">Delete</button>` : ''}
+  grid.innerHTML = rows.map(({ pairing, book, album }) => pairingTeaserHtml(pairing, book, album)).join('');
+}
+
+// ---- Pairing modal ----
+// The single place a card's full detail (why it pairs, chips, waveform,
+// links, heart, curator delete) is shown when reached from a click rather
+// than from search — the recently-added grid and Browse All both open
+// this instead of duplicating the detail markup inline. See CLAUDE.md
+// "Design" for why Browse/landing show teaser cards, not full cards.
+
+function isModalOpen() {
+  return document.getElementById('modalSlot').children.length > 0;
+}
+
+function openPairingModal(pairingId) {
+  const pairing = state.pairings.find(p => p.id === pairingId);
+  if (!pairing) return;
+  const book = state.books.find(b => b.id === pairing.bookIds[0]);
+  const album = state.albums.find(a => a.id === pairing.albumIds[0]);
+  if (!book || !album) return;
+
+  const slot = document.getElementById('modalSlot');
+  slot.innerHTML = `
+    <div class="modal-backdrop">
+      <div class="modal-panel" role="dialog" aria-modal="true" aria-label="${esc(book.title)} paired with ${esc(album.title)}">
+        <button type="button" class="modal-close" data-action="close-modal" aria-label="Close">&times;</button>
+        <p class="card-kicker">Now reading</p>
+        <h2 class="modal-book-title">${esc(book.title)}</h2>
+        <p class="modal-book-author">${esc(book.author)}</p>
+        <div class="tag-row">${(book.moodTags || []).map(t => `<span class="tag-chip is-on">${esc(t)}</span>`).join('')}</div>
+        <div class="pairing-section-label">The score</div>
+        ${albumCardHtml(album, {
+          kicker: 'The score', whyItPairs: pairing.whyItPairs, hearts: pairing.hearts,
+          pairingId: pairing.id, waveformTags: book.moodTags,
+        })}
+        ${state.curatorKey ? `<button class="delete-btn modal-delete" data-action="delete-pairing" data-id="${pairing.id}">Delete this pairing</button>` : ''}
       </div>
     </div>
-  `).join('');
+  `;
+  // Backdrop-click-to-close checks e.target directly rather than going
+  // through the delegated data-action switch — closest() would bubble up
+  // from any click inside .modal-panel to this same backdrop element and
+  // close the modal on every click, since the panel is its descendant.
+  slot.querySelector('.modal-backdrop').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeModal();
+  });
+  document.body.classList.add('modal-open');
+  slot.querySelector('.modal-close').focus();
+}
+
+function closeModal() {
+  document.getElementById('modalSlot').innerHTML = '';
+  document.body.classList.remove('modal-open');
 }
 
 // ---- Mutations ----
@@ -286,7 +352,7 @@ async function heartPairing(id) {
     const record = await apiRequest(`/pairings/${id}/heart`, { method: 'POST' });
     const idx = state.pairings.findIndex(p => p.id === id);
     if (idx !== -1) state.pairings[idx] = recordToPairing(record);
-    renderActiveTab();
+    if (isModalOpen()) openPairingModal(id); else renderActiveTab();
   } catch (err) {
     showStatus(`Couldn't add that heart: ${err.message}`, 'is-error');
   }
@@ -297,6 +363,7 @@ async function deletePairing(id) {
   try {
     await apiRequest(`/pairings/${id}`, { method: 'DELETE' });
     state.pairings = state.pairings.filter(p => p.id !== id);
+    closeModal();
     renderActiveTab();
   } catch (err) {
     showStatus(`Couldn't delete: ${err.message}`, 'is-error');
@@ -423,6 +490,12 @@ function wireEvents() {
       case 'delete-pairing':
         deletePairing(id);
         break;
+      case 'open-pairing':
+        openPairingModal(id);
+        break;
+      case 'close-modal':
+        closeModal();
+        break;
       case 'unlock-curator':
         e.preventDefault();
         unlockCurator();
@@ -434,6 +507,10 @@ function wireEvents() {
         break;
       }
     }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isModalOpen()) closeModal();
   });
 
   document.getElementById('bookSearch').addEventListener('input', (e) => renderBookSearchResults(e.target.value));
