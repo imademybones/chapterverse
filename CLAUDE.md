@@ -61,6 +61,34 @@ render call — there's no reactivity, no diffing.
 interactive element just needs a `data-action` value and a `case` in that
 one switch.
 
+**Teaser cards + one shared modal, not full cards everywhere.** The
+landing page (Find tab, no book selected yet) and Browse All both show
+`pairingTeaserHtml()` — book × album, authors, up to 3 mood chips, nothing
+else — in a `.pairing-grid`. Clicking one calls `openPairingModal(id)`,
+which writes the full detail (why it pairs, all chips, the mood-tag
+waveform, Spotify/Bandcamp, heart, curator delete) into the `#modalSlot`
+div that was sitting unused in `index.html` since scaffolding. This
+replaced a landing page that was blank until you searched, and fixed a
+real bug where clicking a Browse All row did nothing — full detail was
+only ever reachable via search-then-select. Don't duplicate the full
+card markup into the grids to "fix" this differently; the whole point is
+one detail view, reached two ways. The Find tab's post-search results
+(`renderFind()` when a book *is* selected) still render full cards
+inline, not via the modal — that flow was already correct, only the
+zero-state and Browse All were broken.
+
+**Backdrop-click-to-close checks `e.target === e.currentTarget`, not the
+delegated `data-action` switch.** `.modal-close` (the &times; button) is
+wired through the normal switch like everything else, but the backdrop
+itself is deliberately handled by a one-off listener attached in
+`openPairingModal()`. Routing it through `closest('[data-action]')` like
+other actions would close the modal on *any* click inside `.modal-panel`
+— the panel is a descendant of the backdrop, so `closest()` climbing the
+tree would find the backdrop's `data-action` regardless of where inside
+the modal you clicked. If you touch this, keep the direct
+`e.target === e.currentTarget` check rather than "simplifying" it back
+into the delegated switch.
+
 **Data persistence is remote, via a Cloudflare Worker proxy, and the
 Worker's source lives in this repo** (`worker/liner-notes-worker.js`),
 deployed with `wrangler deploy` — reviewable, not tribal knowledge,
